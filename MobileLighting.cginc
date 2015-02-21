@@ -136,3 +136,33 @@ fixed4 LightingBlinnPhongRampMobile (SurfaceOutput s, fixed3 lightDir, fixed3 vi
 	c.a = s.Alpha + _LightColor0.a * _SpecColor.a * spec * atten;
 	return c;
 }
+
+fixed4 LightingLambertToonMobile (SurfaceOutput s, fixed3 lightDir, fixed3 viewDir, fixed atten) {
+	    fixed3 h = normalize (lightDir + viewDir);
+		fixed diff = (dot (s.Normal, lightDir)) * 0.5 + 0.5;
+		fixed4 ramp = tex2D(_Ramp, fixed2(diff,diff));
+		fixed4 c;
+		c.rgb = (s.Albedo * _LightColor0.rgb * ramp.rgb) * (atten * 2);
+		c.a = s.Alpha + _LightColor0.a * atten;
+		return c;
+}
+
+fixed4 LightingBlinnPhongToonMobile (SurfaceOutput s, fixed3 lightDir, fixed3 viewDir, fixed atten) {
+	    fixed3 h = normalize (lightDir + viewDir);
+		fixed diff = (dot (s.Normal, lightDir)) * 0.5 + 0.5;
+		fixed nh = max (0, dot (s.Normal, h));
+		fixed spec = pow (nh, s.Specular*20) * (s.Gloss);
+		 if (spec < 0.5) 
+            {
+               spec = 0; // drop the fragment if y coordinate > 0
+            }
+         if (spec > 0.5) 
+            {
+               spec = 1; // drop the fragment if y coordinate > 0
+            }
+		fixed4 ramp = tex2D(_Ramp, fixed2(diff,diff));
+		fixed4 c;
+		c.rgb = ((s.Albedo * _LightColor0.rgb * ramp.rgb) + (_LightColor0.rgb * _SpecColor.rgb * spec * ramp)) * (atten * 2);
+		c.a = s.Alpha + _LightColor0.a * _SpecColor.a * spec * atten;
+		return c;
+}
